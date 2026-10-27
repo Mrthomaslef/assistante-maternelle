@@ -275,9 +275,11 @@ export default function App() {
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-2 px-3.5 py-2.5">
           {/* Logo & Nom */}
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white">
-              <Baby className="h-5 w-5" />
-            </div>
+            <img
+              src="./icon.svg"
+              alt="Logo AssMat"
+              className="h-8 w-8 shrink-0 rounded-xl shadow-2xs"
+            />
             <span className="text-sm font-extrabold tracking-tight text-slate-900">
               AssMat
             </span>

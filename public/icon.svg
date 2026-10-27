@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="55%" stop-color="#4338ca" />
+      <stop offset="100%" stop-color="#312e81" />
+    </linearGradient>
+    <linearGradient id="badge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#1e1b4b" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- Fond arrondi style iOS / Android -->
+  <rect width="512" height="512" rx="115" fill="url(#bg)" />
+
+  <!-- Halo décoratif doux -->
+  <circle cx="240" cy="230" r="170" fill="#ffffff" fill-opacity="0.08" />
+
+  <!-- Visage de bébé souriant + petit coeur / calepin -->
+  <g filter="url(#shadow)">
+    <!-- Oreilles -->
+    <circle cx="116" cy="245" r="28" fill="#ffffff" />
+    <circle cx="364" cy="245" r="28" fill="#ffffff" />
+
+    <!-- Tête du bébé -->
+    <circle cx="240" cy="240" r="126" fill="#ffffff" />
+
+    <!-- Mèche de cheveux bouclée sur le haut du crâne -->
+    <path
+      d="M225 114 C230 82, 275 82, 265 114 C258 134, 232 132, 242 115"
+      fill="none"
+      stroke="#4338ca"
+      stroke-width="16"
+      stroke-linecap="round"
+    />
+
+    <!-- Yeux joyeux -->
+    <path d="M182 225 Q196 208 210 225" fill="none" stroke="#312e81" stroke-width="14" stroke-linecap="round" />
+    <path d="M270 225 Q284 208 298 225" fill="none" stroke="#312e81" stroke-width="14" stroke-linecap="round" />
+
+    <!-- Joues rosées -->
+    <ellipse cx="172" cy="256" rx="18" ry="11" fill="#fb7185" fill-opacity="0.45" />
+    <ellipse cx="308" cy="256" rx="18" ry="11" fill="#fb7185" fill-opacity="0.45" />
+
+    <!-- Grand sourire / tétine -->
+    <path d="M204 268 Q240 304 276 268" fill="none" stroke="#4f46e5" stroke-width="14" stroke-linecap="round" />
+  </g>
+
+  <!-- Pastille Calculatrice / Euro en bas à droite -->
+  <g filter="url(#shadow)">
+    <circle cx="376" cy="372" r="82" fill="url(#badge)" stroke="#ffffff" stroke-width="12" />
+    <text
+      x="376"
+      y="402"
+      text-anchor="middle"
+      font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+      font-size="92"
+      font-weight="900"
+      fill="#ffffff"
+    >€</text>
+  </g>
+</svg>
