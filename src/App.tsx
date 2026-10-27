@@ -24,7 +24,7 @@ import {
   Trash2,
 } from 'lucide-react';
 
-const STORAGE_KEY = 'assmat_calculateur_state_v1';
+const STORAGE_KEY = 'assmat_calculateur_state_v2';
 
 const DEFAULT_CONTRAT: ContratConfig = {
   nomEnfant: 'Léo',
@@ -39,7 +39,7 @@ const DEFAULT_CONTRAT: ContratConfig = {
   salariePrenom: 'Sophie',
   salarieAdresse: '8 avenue Victor Hugo, 75000 Paris',
   salarieNumSS: '',
-  majorationHSMensualisee: false,
+  majorationHSMensualisee: true,
   tauxMajorationHS: 0.1,
   tauxMajorationHC: 0,
   semainesTypes: [
@@ -48,7 +48,7 @@ const DEFAULT_CONTRAT: ContratConfig = {
       label: 'Semaine A',
       active: true,
       nbSemainesAn: 52,
-      heuresParJour: [9, 9, 9, 9, 9, 0, 0],
+      heuresParJour: [10, 10, 10, 10, 10, 0, 0],
     },
     {
       id: 'B',
@@ -88,7 +88,7 @@ const DEFAULT_CONTRAT: ContratConfig = {
   ],
   tauxHoraireBrut: 5.7604,
   ieHoraireContractuelle: 0.435,
-  ieJournaliereContractuelle: 3.92,
+  ieJournaliereContractuelle: 2.65,
   repas1Label: 'Déjeuner',
   repas1Tarif: 3.5,
   repas2Label: 'Goûter',

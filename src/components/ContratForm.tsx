@@ -55,7 +55,7 @@ export const ContratForm: React.FC<Props> = ({ config, onChange, synthese }) => 
       updateSemaine(inactiveIdx, {
         active: true,
         nbSemainesAn: 10,
-        heuresParJour: [8, 8, 8, 8, 8, 0, 0],
+        heuresParJour: [10, 10, 10, 10, 10, 0, 0],
       });
     }
   };

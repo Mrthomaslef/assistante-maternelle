@@ -393,7 +393,7 @@ export function appliquerSituationJour(
       // Heures complémentaires sur un jour non prévu au contrat : Col 3 et Col 6
       updated.heuresPrevues = 0;
       updated.heuresPotentielles = 0;
-      const hComp = updated.heuresRealisees > 0 ? updated.heuresRealisees : 8;
+      const hComp = updated.heuresRealisees > 0 ? updated.heuresRealisees : 10;
       updated.heuresRealisees = hComp;
       updated.heuresADeduire = 0;
       updated.heuresComplementaires = hComp;
