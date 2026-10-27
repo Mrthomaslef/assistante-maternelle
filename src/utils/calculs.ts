@@ -270,9 +270,11 @@ export function appliquerSituationJour(
       updated.heuresADeduire = 0;
       updated.heuresComplementaires = 0;
       if (hContrat > 0 && updated.repas1 === 0 && updated.repas2 === 0 && updated.repas3 === 0) {
+        const [y, m, d] = jour.date.split('-').map(Number);
+        const isMercredi = new Date(y, m - 1, d).getDay() === 3;
         updated.repas1 = 1;
-        updated.repas2 = hContrat > 5 ? 1 : 0;
-        updated.repas3 = 0;
+        updated.repas2 = 1;
+        updated.repas3 = isMercredi || hContrat <= 5 ? 0 : 1;
       }
       break;
 

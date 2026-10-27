@@ -24,7 +24,7 @@ import {
   Trash2,
 } from 'lucide-react';
 
-const STORAGE_KEY = 'assmat_calculateur_state_v3';
+const STORAGE_KEY = 'assmat_calculateur_state_v4';
 
 const DEFAULT_CONTRAT: ContratConfig = {
   nomEnfant: 'Léo',
