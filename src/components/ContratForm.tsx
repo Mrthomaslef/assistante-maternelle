@@ -55,7 +55,7 @@ export const ContratForm: React.FC<Props> = ({ config, onChange, synthese }) => 
       updateSemaine(inactiveIdx, {
         active: true,
         nbSemainesAn: 10,
-        heuresParJour: [10, 10, 10, 10, 10, 0, 0],
+        heuresParJour: [10, 10, 5, 10, 10, 0, 0],
       });
     }
   };
@@ -135,7 +135,7 @@ export const ContratForm: React.FC<Props> = ({ config, onChange, synthese }) => 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[11px] font-semibold text-slate-600">
                 Entretien (€/h)
@@ -167,10 +167,12 @@ export const ContratForm: React.FC<Props> = ({ config, onChange, synthese }) => 
                 className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold"
               />
             </div>
+          </div>
 
+          <div className="grid grid-cols-3 gap-2.5">
             <div>
               <label className="block text-[11px] font-semibold text-slate-600">
-                Déjeuner (€)
+                Repas 1 ({config.repas1Label || 'Déjeuner'}) €
               </label>
               <input
                 type="number"
@@ -184,7 +186,7 @@ export const ContratForm: React.FC<Props> = ({ config, onChange, synthese }) => 
 
             <div>
               <label className="block text-[11px] font-semibold text-slate-600">
-                Goûter (€)
+                Repas 2 ({config.repas2Label || 'Goûter'}) €
               </label>
               <input
                 type="number"
@@ -192,6 +194,20 @@ export const ContratForm: React.FC<Props> = ({ config, onChange, synthese }) => 
                 min="0"
                 value={config.repas2Tarif}
                 onChange={(e) => updateField('repas2Tarif', Number(e.target.value))}
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600">
+                Repas 3 ({config.repas3Label || 'Repas 3'}) €
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                value={config.repas3Tarif}
+                onChange={(e) => updateField('repas3Tarif', Number(e.target.value))}
                 className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold"
               />
             </div>

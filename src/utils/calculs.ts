@@ -269,9 +269,10 @@ export function appliquerSituationJour(
       updated.heuresRealisees = hContrat;
       updated.heuresADeduire = 0;
       updated.heuresComplementaires = 0;
-      if (hContrat > 0 && updated.repas1 === 0 && updated.repas2 === 0) {
+      if (hContrat > 0 && updated.repas1 === 0 && updated.repas2 === 0 && updated.repas3 === 0) {
         updated.repas1 = 1;
-        updated.repas2 = 1;
+        updated.repas2 = hContrat > 5 ? 1 : 0;
+        updated.repas3 = 0;
       }
       break;
 

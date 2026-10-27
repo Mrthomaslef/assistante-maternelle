@@ -368,6 +368,59 @@ export const FeuillePresence: React.FC<Props> = ({
                 </div>
               </button>
 
+              {/* Cases à cocher directes des 3 indemnités repas sur chaque jour travaillé */}
+              {jour.heuresRealisees > 0 && !isExpanded && (
+                <div className="grid grid-cols-3 gap-1.5 border-t border-slate-100 bg-slate-50/50 px-3.5 py-2">
+                  {[
+                    {
+                      field: 'repas1' as const,
+                      label: config.repas1Label || 'Repas 1',
+                      tarif: config.repas1Tarif,
+                      val: jour.repas1,
+                    },
+                    {
+                      field: 'repas2' as const,
+                      label: config.repas2Label || 'Repas 2',
+                      tarif: config.repas2Tarif,
+                      val: jour.repas2,
+                    },
+                    {
+                      field: 'repas3' as const,
+                      label: config.repas3Label || 'Repas 3',
+                      tarif: config.repas3Tarif,
+                      val: jour.repas3,
+                    },
+                  ].map((r) => {
+                    const checked = r.val > 0;
+                    return (
+                      <button
+                        key={r.field}
+                        type="button"
+                        onClick={() => updateJourField(idx, r.field, checked ? 0 : 1)}
+                        className={`flex items-center justify-center gap-1.5 rounded-xl border px-2 py-1.5 text-[11px] font-semibold transition active:scale-[0.98] ${
+                          checked
+                            ? 'border-amber-400 bg-amber-50 text-amber-900'
+                            : 'border-slate-200 bg-white text-slate-400'
+                        }`}
+                      >
+                        <span
+                          className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px] ${
+                            checked
+                              ? 'border-amber-600 bg-amber-500 font-bold text-white'
+                              : 'border-slate-300 bg-slate-50'
+                          }`}
+                        >
+                          {checked ? '✓' : ''}
+                        </span>
+                        <span className="truncate">
+                          {r.label} ({r.tarif.toFixed(2)}€)
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               {/* Panneau déplié pour modifier la journée facilement au doigt */}
               {isExpanded && (
                 <div className="space-y-4 border-t border-slate-100 bg-slate-50/70 p-4">
@@ -457,45 +510,62 @@ export const FeuillePresence: React.FC<Props> = ({
                       </div>
                     </div>
 
-                    {/* Repas du jour */}
+                    {/* Repas du jour (3 indemnités repas cochables) */}
                     <div className="rounded-xl border border-slate-200 bg-white p-3">
                       <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
-                        <Utensils className="h-4 w-4 text-amber-600" /> Repas pris chez nounou
+                        <Utensils className="h-4 w-4 text-amber-600" /> 3 Indemnités de repas
                       </span>
-                      <div className="mt-2 grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            updateJourField(idx, 'repas1', jour.repas1 > 0 ? 0 : 1)
-                          }
-                          className={`flex items-center justify-between rounded-xl border px-3 py-2 text-xs font-semibold transition ${
-                            jour.repas1 > 0
-                              ? 'border-amber-400 bg-amber-50 text-amber-900'
-                              : 'border-slate-200 bg-slate-50 text-slate-500'
-                          }`}
-                        >
-                          <span>{config.repas1Label || 'Déjeuner'}</span>
-                          <span className="font-bold">
-                            {jour.repas1 > 0 ? 'Oui (1)' : 'Non'}
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            updateJourField(idx, 'repas2', jour.repas2 > 0 ? 0 : 1)
-                          }
-                          className={`flex items-center justify-between rounded-xl border px-3 py-2 text-xs font-semibold transition ${
-                            jour.repas2 > 0
-                              ? 'border-amber-400 bg-amber-50 text-amber-900'
-                              : 'border-slate-200 bg-slate-50 text-slate-500'
-                          }`}
-                        >
-                          <span>{config.repas2Label || 'Goûter'}</span>
-                          <span className="font-bold">
-                            {jour.repas2 > 0 ? 'Oui (1)' : 'Non'}
-                          </span>
-                        </button>
+                      <div className="mt-2 grid grid-cols-3 gap-1.5">
+                        {[
+                          {
+                            field: 'repas1' as const,
+                            label: config.repas1Label || 'Repas 1',
+                            tarif: config.repas1Tarif,
+                            val: jour.repas1,
+                          },
+                          {
+                            field: 'repas2' as const,
+                            label: config.repas2Label || 'Repas 2',
+                            tarif: config.repas2Tarif,
+                            val: jour.repas2,
+                          },
+                          {
+                            field: 'repas3' as const,
+                            label: config.repas3Label || 'Repas 3',
+                            tarif: config.repas3Tarif,
+                            val: jour.repas3,
+                          },
+                        ].map((r) => {
+                          const checked = r.val > 0;
+                          return (
+                            <button
+                              key={r.field}
+                              type="button"
+                              onClick={() =>
+                                updateJourField(idx, r.field, checked ? 0 : 1)
+                              }
+                              className={`flex flex-col items-center justify-center rounded-xl border p-2 text-xs font-semibold transition ${
+                                checked
+                                  ? 'border-amber-400 bg-amber-50 text-amber-900'
+                                  : 'border-slate-200 bg-slate-50 text-slate-400'
+                              }`}
+                            >
+                              <span
+                                className={`mb-1 flex h-5 w-5 items-center justify-center rounded border text-xs ${
+                                  checked
+                                    ? 'border-amber-600 bg-amber-500 font-bold text-white'
+                                    : 'border-slate-300 bg-white'
+                                }`}
+                              >
+                                {checked ? '✓' : ''}
+                              </span>
+                              <span className="truncate font-bold">{r.label}</span>
+                              <span className="text-[10px] opacity-80">
+                                {r.tarif.toFixed(2)} €
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
