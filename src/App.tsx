@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ContratConfig, FeuilleMensuelle } from './types';
 import {
   calculerResultatMensuel,
@@ -12,7 +12,6 @@ import { BulletinSalaire } from './components/BulletinSalaire';
 import { RecapAnnuel } from './components/RecapAnnuel';
 import { NoticeModal } from './components/NoticeModal';
 import {
-  Baby,
   CalendarDays,
   FileSpreadsheet,
   Receipt,
@@ -22,6 +21,7 @@ import {
   Upload,
   Plus,
   Trash2,
+  RefreshCw,
 } from 'lucide-react';
 
 const STORAGE_KEY = 'assmat_calculateur_state_v4';
@@ -172,6 +172,56 @@ export default function App() {
   const [newMonthMois, setNewMonthMois] = useState(11);
   const [showAddMonth, setShowAddMonth] = useState(false);
 
+  // Pull-to-refresh (tirer vers le bas pour actualiser : uniquement icône flèche qui tourne)
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const touchStartYRef = useRef<number | null>(null);
+  const PULL_THRESHOLD = 65;
+
+  useEffect(() => {
+    const onTouchStart = (e: TouchEvent) => {
+      if (window.scrollY <= 0 && !isRefreshing) {
+        touchStartYRef.current = e.touches[0].clientY;
+      } else {
+        touchStartYRef.current = null;
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (touchStartYRef.current === null || isRefreshing) return;
+      const deltaY = e.touches[0].clientY - touchStartYRef.current;
+      if (deltaY > 0 && window.scrollY <= 0) {
+        const damped = Math.min(110, deltaY * 0.45);
+        setPullDistance(damped);
+      } else {
+        setPullDistance(0);
+      }
+    };
+
+    const onTouchEnd = () => {
+      if (touchStartYRef.current === null || isRefreshing) return;
+      if (pullDistance >= PULL_THRESHOLD) {
+        setIsRefreshing(true);
+        setPullDistance(60);
+        setTimeout(() => {
+          window.location.reload();
+        }, 450);
+      } else {
+        setPullDistance(0);
+      }
+      touchStartYRef.current = null;
+    };
+
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [pullDistance, isRefreshing]);
+
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ config, feuilles }));
@@ -270,6 +320,30 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
+      {/* Animation Pull-to-Refresh (uniquement la flèche qui tourne, aucun texte) */}
+      {(pullDistance > 0 || isRefreshing) && (
+        <div
+          className="pointer-events-none fixed left-0 right-0 top-0 z-50 flex justify-center transition-transform duration-150 print:hidden"
+          style={{
+            transform: `translateY(${Math.min(72, pullDistance)}px)`,
+            opacity: Math.min(1, pullDistance / 35),
+          }}
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow-lg">
+            <RefreshCw
+              className={`h-5 w-5 text-indigo-600 ${
+                isRefreshing ? 'animate-spin' : ''
+              }`}
+              style={
+                !isRefreshing
+                  ? { transform: `rotate(${pullDistance * 4.5}deg)` }
+                  : undefined
+              }
+            />
+          </div>
+        </div>
+      )}
+
       {/* Barre supérieure compacte et épurée */}
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-xs print:hidden">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-2 px-3.5 py-2.5">
