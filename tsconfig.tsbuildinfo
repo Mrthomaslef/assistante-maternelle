@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/bulletinsalaire.tsx","./src/components/contratform.tsx","./src/components/feuillepresence.tsx","./src/components/noticemodal.tsx","./src/components/recapannuel.tsx","./src/data/baremes.ts","./src/types/index.ts","./src/utils/calculs.ts"],"version":"5.6.3"}
