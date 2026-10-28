@@ -180,8 +180,9 @@ export function calculerSyntheseContrat(
 
   const heuresMensualiseesTotal = isReel ? 0 : heuresTotalesAn / 12;
 
-  const joursMensualisesExact = isReel ? 0 : joursAn / 12;
-  const joursMensualisesArrondi = Math.ceil(joursMensualisesExact);
+  // Dans l'Excel (cellule L10), le nombre de jours mensualisés est ARRONDI.SUP(joursAn / 12; 0), soit 22,00 j/mois pour 52 sem × 5 j
+  const joursMensualisesArrondi = isReel ? 0 : Math.ceil(joursAn / 12);
+  const joursMensualisesExact = joursMensualisesArrondi;
 
   const heuresMoyenneParSemaine =
     nbSemainesTotalAn > 0 ? heuresTotalesAn / nbSemainesTotalAn : 0;

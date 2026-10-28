@@ -77,23 +77,34 @@ export const ContratForm: React.FC<Props> = ({ config, onChange, synthese }) => 
       {/* Carte Synthèse Mensualisation */}
       <div className="rounded-2xl bg-gradient-to-br from-indigo-900 to-slate-900 p-4 text-white shadow-md">
         <div className="flex items-baseline justify-between">
-          <span className="text-xs text-indigo-200">Mensualisation nette (hors IE/repas)</span>
-          <span className="text-2xl font-extrabold text-emerald-300">
-            {synthese.mensualisationNetteEstimee.toFixed(2)} € <span className="text-xs font-normal">/mois</span>
-          </span>
+          <div>
+            <span className="block text-xs text-indigo-200">
+              Mensualisation brute : <strong>{synthese.mensualisationBruteTotale.toFixed(2)} €</strong>
+            </span>
+            <span className="text-[11px] text-indigo-300">
+              Taux conv. {(conv * 100).toFixed(2)}% ({config.region})
+            </span>
+          </div>
+          <div className="text-right">
+            <span className="block text-[10px] text-indigo-200">Mensualisation nette</span>
+            <span className="text-2xl font-extrabold text-emerald-300">
+              {synthese.mensualisationNetteEstimee.toFixed(2)} €{' '}
+              <span className="text-xs font-normal">/mois</span>
+            </span>
+          </div>
         </div>
         <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/10 pt-3 text-center text-xs">
           <div>
-            <span className="block text-[10px] text-indigo-200">Heures / mois</span>
-            <strong>{synthese.heuresMensualiseesTotal.toFixed(1)} h</strong>
+            <span className="block text-[10px] text-indigo-200">Nb h mensualisées</span>
+            <strong>{synthese.heuresMensualiseesTotal.toFixed(2)} h</strong>
           </div>
           <div>
-            <span className="block text-[10px] text-indigo-200">Jours / mois</span>
-            <strong>{synthese.joursMensualisesArrondi} j</strong>
+            <span className="block text-[10px] text-indigo-200">Nb j mensualisés</span>
+            <strong>{synthese.joursMensualisesArrondi.toFixed(2)} j</strong>
           </div>
           <div>
-            <span className="block text-[10px] text-indigo-200">Moyenne / sem.</span>
-            <strong>{synthese.heuresMoyenneParSemaine.toFixed(1)} h</strong>
+            <span className="block text-[10px] text-indigo-200">Taux horaire brut</span>
+            <strong>{synthese.tauxHoraireBrut.toFixed(4)} €</strong>
           </div>
         </div>
       </div>
