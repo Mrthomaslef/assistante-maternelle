@@ -403,13 +403,22 @@ export const BulletinSalaire: React.FC<Props> = ({
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between py-1">
                 <span>
-                  Salaire de base ({resultat.contrat.heuresMensualiseesNormales.toFixed(2)}h ×{' '}
+                  Salaire de base ({resultat.contrat.heuresMensualiseesBaseDF18.toFixed(2)}h ×{' '}
                   {resultat.contrat.tauxHoraireBrut.toFixed(3)}€)
                 </span>
                 <strong className="text-slate-900">
                   {resultat.salaireBaseMensuelBrut.toFixed(2)} €
                 </strong>
               </div>
+
+              {resultat.hrsMensuMajoreesBrut > 0 && (
+                <div className="flex justify-between py-1">
+                  <span>
+                    Heures mensualisées majorées ({resultat.contrat.heuresMensualiseesMajoreesDF19.toFixed(2)}h)
+                  </span>
+                  <strong>+{resultat.hrsMensuMajoreesBrut.toFixed(2)} €</strong>
+                </div>
+              )}
 
               {resultat.deductionAbsenceCourCassationBrut !== 0 && (
                 <div className="flex justify-between py-1 text-rose-700">

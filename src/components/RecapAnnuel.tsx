@@ -1,8 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ContratConfig, FeuilleMensuelle } from '../types';
-import { calculerResultatMensuel } from '../utils/calculs';
+import { calculerResultatMensuel, calculerSyntheseContrat } from '../utils/calculs';
 import { MOIS_NOMS } from '../data/baremes';
-import { TrendingUp, Award, Landmark, Scale, ChevronRight } from 'lucide-react';
+import {
+  TrendingUp,
+  Award,
+  Landmark,
+  Scale,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Palmtree,
+  Briefcase,
+} from 'lucide-react';
 
 interface Props {
   config: ContratConfig;
@@ -15,14 +25,22 @@ export const RecapAnnuel: React.FC<Props> = ({
   feuilles,
   onSelectFeuille,
 }) => {
+  const [showCPCalc, setShowCPCalc] = useState(false);
+  const [showFranceTravail, setShowFranceTravail] = useState(false);
+  const [nbEnfantsMoins15AM, setNbEnfantsMoins15AM] = useState(0);
+  const [joursFractionnement, setJoursFractionnement] = useState(0);
+  const [nbSemainesTravailleesAI, setNbSemainesTravailleesAI] = useState(44);
+
   const sorted = [...feuilles].sort((a, b) =>
-    a.annee !== b.annee ? b.annee - a.annee : b.mois - a.mois
+    a.annee !== b.annee ? b.annee - a.annee : b.mois - b.mois
   );
 
   const lignes = sorted.map((f) => ({
     feuille: f,
     res: calculerResultatMensuel(config, f),
   }));
+
+  const syntheseContrat = calculerSyntheseContrat(config);
 
   const cumulBrut = lignes.reduce((acc, l) => acc + l.res.totalBrut, 0);
   const cumulBrutHorsCP = lignes.reduce(
@@ -45,13 +63,51 @@ export const RecapAnnuel: React.FC<Props> = ({
     (acc, l) => acc + l.res.regulAI.ecartHeuresNormales,
     0
   );
+  const cumulEcartHeuresMajAI = lignes.reduce(
+    (acc, l) => acc + l.res.regulAI.ecartHeuresMaj,
+    0
+  );
 
+  // Formule Régul de salaire du 02/04/2026 : =SI(B12+C12-D12-E12<0; 0; B12+C12-D12-E12)
+  // Compensation entre heures normales et majorées, jamais de remboursement si trop-perçu employeur (<0 -> 0)
+  const soldeRegulNormaleBrut = cumulEcartHeuresAI * config.tauxHoraireBrut;
+  const soldeRegulMajBrut =
+    cumulEcartHeuresMajAI *
+    config.tauxHoraireBrut *
+    (1 + config.tauxMajorationHS);
   const montantRegulAIBrut = Math.max(
     0,
-    cumulEcartHeuresAI * config.tauxHoraireBrut
+    Number((soldeRegulNormaleBrut + soldeRegulMajBrut).toFixed(2))
   );
+
+  // Indemnité de rupture (1/80e de tous les salaires bruts versés, si >= 9 mois d'ancienneté)
   const indemniteRuptureEstimee = cumulBrut / 80;
-  const cp10PourcentBrut = cumulBrutHorsCP * 0.1;
+
+  // Calcul des Congés Payés selon la formule officielle de l'Excel (23/06/2024 & 11/07/2026) :
+  // =SI((CP_base + Enfants*2)>30; 30; ARRONDI.SUP(CP_base + Enfants*2; 0)) + JoursFractionnement
+  const cpBaseOuvrables =
+    config.typeContrat === 'AC'
+      ? Math.min(30, lignes.length * 2.5)
+      : (nbSemainesTravailleesAI / 4) * 2.5;
+  const cpOuvrablesAvantFrac = Math.min(
+    30,
+    Math.ceil(cpBaseOuvrables) + nbEnfantsMoins15AM * 2
+  );
+  const totalJoursCPOuvrablesAcquis = cpOuvrablesAvantFrac + joursFractionnement;
+
+  // Maintien de salaire : (Nb jours ouvrables acquis / 6) * Heures moyennes par semaine * Taux horaire brut
+  const montantCPMaintienSalaireBrut =
+    (totalJoursCPOuvrablesAcquis / 6) *
+    syntheseContrat.heuresMoyenneParSemaine *
+    config.tauxHoraireBrut;
+  // Règle des 10% : 10% des salaires bruts perçus sur la période de référence
+  const montantCP10PourcentBrut = cumulBrut * 0.1;
+  // On retient le plus favorable pour le salarié : MAX(Maintien, 10%)
+  const montantCPRetenuBrut = Math.max(
+    montantCPMaintienSalaireBrut,
+    montantCP10PourcentBrut
+  );
+
   const resteAChargeFisc = Math.max(0, cumulSalaireNetSeul + cumulIE - cumulCMG);
 
   return (
@@ -78,7 +134,7 @@ export const RecapAnnuel: React.FC<Props> = ({
             {resteAChargeFisc.toFixed(2)} €
           </div>
           <div className="mt-0.5 text-[10px] text-emerald-700">
-            Reste à déclarer (hors CMG)
+            Salaires nets + IE − CMG
           </div>
         </div>
 
@@ -103,12 +159,188 @@ export const RecapAnnuel: React.FC<Props> = ({
             {indemniteRuptureEstimee.toFixed(2)} €
           </div>
           <div className="mt-0.5 text-[10px] text-slate-400">
-            CP 10% : {cp10PourcentBrut.toFixed(2)} €
+            Hors CP : {cumulBrutHorsCP.toFixed(2)} €
           </div>
         </div>
       </div>
 
-      {/* Liste des mois enregistrés (Cartes tactiles sur mobile) */}
+      {/* Accordéon 1 : Calculateur officiel des Congés Payés (Maintien vs 10%) */}
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs">
+        <button
+          type="button"
+          onClick={() => setShowCPCalc(!showCPCalc)}
+          className="flex w-full items-center justify-between px-4 py-3.5 text-left"
+        >
+          <div className="flex items-center gap-2.5">
+            <Palmtree className="h-4 w-4 text-teal-600" />
+            <div>
+              <span className="block text-xs font-bold text-slate-800">
+                Calculateur Congés Payés (Maintien de salaire vs 10%)
+              </span>
+              <span className="text-[11px] text-slate-500">
+                {totalJoursCPOuvrablesAcquis} j ouvrables acquis • Montant plus favorable :{' '}
+                <strong>{montantCPRetenuBrut.toFixed(2)} € brut</strong>
+              </span>
+            </div>
+          </div>
+          {showCPCalc ? (
+            <ChevronUp className="h-5 w-5 text-slate-400" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-slate-400" />
+          )}
+        </button>
+
+        {showCPCalc && (
+          <div className="space-y-3 border-t border-slate-100 bg-slate-50/60 p-4 text-xs">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {config.typeContrat === 'AI' && (
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600">
+                    Nb semaines travaillées / assimilées (AI)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    min="0"
+                    max="52"
+                    value={nbSemainesTravailleesAI}
+                    onChange={(e) =>
+                      setNbSemainesTravailleesAI(Number(e.target.value))
+                    }
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-bold"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600">
+                  Enfants &lt; 15 ans de l’AM au 30/04 (+2j/enf)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="10"
+                  value={nbEnfantsMoins15AM}
+                  onChange={(e) => setNbEnfantsMoins15AM(Number(e.target.value))}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600">
+                  Jours de fractionnement (+0 à 2j)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="2"
+                  value={joursFractionnement}
+                  onChange={(e) =>
+                    setJoursFractionnement(Number(e.target.value))
+                  }
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-bold"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <span className="block text-[11px] text-slate-500">
+                  1. Méthode Maintien de salaire
+                </span>
+                <strong className="mt-0.5 block text-base text-slate-900">
+                  {montantCPMaintienSalaireBrut.toFixed(2)} € brut
+                </strong>
+                <span className="text-[10px] text-slate-400">
+                  ({totalJoursCPOuvrablesAcquis}j ÷ 6 ×{' '}
+                  {syntheseContrat.heuresMoyenneParSemaine.toFixed(1)}h/sem)
+                </span>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <span className="block text-[11px] text-slate-500">
+                  2. Méthode 10% des bruts
+                </span>
+                <strong className="mt-0.5 block text-base text-slate-900">
+                  {montantCP10PourcentBrut.toFixed(2)} € brut
+                </strong>
+                <span className="text-[10px] text-slate-400">
+                  (10% de {cumulBrut.toFixed(2)} € brut)
+                </span>
+              </div>
+
+              <div className="rounded-xl border border-teal-300 bg-teal-50 p-3">
+                <span className="block text-[11px] font-bold text-teal-800">
+                  Montant retenu (le plus favorable)
+                </span>
+                <strong className="mt-0.5 block text-base text-teal-900">
+                  {montantCPRetenuBrut.toFixed(2)} € brut
+                </strong>
+                <span className="text-[10px] text-teal-700">
+                  Soit {(montantCPRetenuBrut * syntheseContrat.bareme.tauxConversionBrutNet).toFixed(2)} € net
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Accordéon 2 : Aide au remplissage France Travail */}
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs">
+        <button
+          type="button"
+          onClick={() => setShowFranceTravail(!showFranceTravail)}
+          className="flex w-full items-center justify-between px-4 py-3.5 text-left"
+        >
+          <div className="flex items-center gap-2.5">
+            <Briefcase className="h-4 w-4 text-indigo-600" />
+            <div>
+              <span className="block text-xs font-bold text-slate-800">
+                Aide à l’attestation France Travail (Fin de contrat)
+              </span>
+              <span className="text-[11px] text-slate-500">
+                Salaires bruts hors ICCP et heures réellement effectuées par mois
+              </span>
+            </div>
+          </div>
+          {showFranceTravail ? (
+            <ChevronUp className="h-5 w-5 text-slate-400" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-slate-400" />
+          )}
+        </button>
+
+        {showFranceTravail && (
+          <div className="border-t border-slate-100 p-4 text-xs">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-slate-200 text-[11px] font-bold text-slate-500">
+                  <th className="py-1.5">Mois</th>
+                  <th className="py-1.5 text-right">Salaire Brut (hors ICCP)</th>
+                  <th className="py-1.5 text-right">Heures réalisées</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {lignes.map(({ feuille: f, res }) => (
+                  <tr key={f.id}>
+                    <td className="py-1.5 font-semibold">
+                      {MOIS_NOMS[f.mois - 1]} {f.annee}
+                    </td>
+                    <td className="py-1.5 text-right font-medium">
+                      {(res.totalBrut - res.soldeCPFinContratBrut).toFixed(2)} €
+                    </td>
+                    <td className="py-1.5 text-right">
+                      {res.totalHeuresRealisees.toFixed(2)} h
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Liste des mois enregistrés */}
       <div className="space-y-2.5">
         <h3 className="px-1 text-xs font-bold uppercase tracking-wider text-slate-500">
           Historique des mois ({lignes.length})
@@ -128,7 +360,9 @@ export const RecapAnnuel: React.FC<Props> = ({
               <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                 <span>{res.totalHeuresRealisees}h faites</span>
                 <span>•</span>
-                <span>{res.declarationRevenusAM.nbJoursReelsAccueilTotal}j accueillis</span>
+                <span>
+                  {res.declarationRevenusAM.nbJoursReelsAccueilTotal}j accueillis
+                </span>
                 {res.totalIE + res.totalIR > 0 && (
                   <>
                     <span>•</span>

@@ -589,10 +589,50 @@ export const FeuillePresence: React.FC<Props> = ({
                     </button>
 
                     {isAdvOpen && (
-                      <div className="mt-3 grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:grid-cols-4">
+                      <div className="mt-3 grid grid-cols-2 gap-2.5 rounded-xl border border-slate-200 bg-white p-3 sm:grid-cols-4">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-600">
+                            Col 1 • H. prévues
+                          </label>
+                          <input
+                            type="number"
+                            step="0.25"
+                            min="0"
+                            value={jour.heuresPrevues}
+                            onChange={(e) =>
+                              updateJourField(
+                                idx,
+                                'heuresPrevues',
+                                Number(e.target.value)
+                              )
+                            }
+                            className="mt-1 w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm font-semibold"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-indigo-700">
+                            Col 2 • H. potentielles
+                          </label>
+                          <input
+                            type="number"
+                            step="0.25"
+                            min="0"
+                            value={jour.heuresPotentielles}
+                            onChange={(e) =>
+                              updateJourField(
+                                idx,
+                                'heuresPotentielles',
+                                Number(e.target.value)
+                              )
+                            }
+                            className="mt-1 w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm font-semibold text-indigo-800"
+                          />
+                        </div>
+
                         <div>
                           <label className="block text-[11px] font-semibold text-rose-700">
-                            Heures à déduire
+                            Col 4 • H. à déduire
                           </label>
                           <input
                             type="number"
@@ -612,7 +652,7 @@ export const FeuillePresence: React.FC<Props> = ({
 
                         <div>
                           <label className="block text-[11px] font-semibold text-cyan-700">
-                            Heures compl. (hors contrat)
+                            Col 6 • H. compl. (≤45h)
                           </label>
                           <input
                             type="number"
@@ -632,7 +672,27 @@ export const FeuillePresence: React.FC<Props> = ({
 
                         <div>
                           <label className="block text-[11px] font-semibold text-purple-700">
-                            Heures majorées (&gt;45h)
+                            Col 7 • H. maj prévues
+                          </label>
+                          <input
+                            type="number"
+                            step="0.25"
+                            min="0"
+                            value={jour.heuresMajPrevues}
+                            onChange={(e) =>
+                              updateJourField(
+                                idx,
+                                'heuresMajPrevues',
+                                Number(e.target.value)
+                              )
+                            }
+                            className="mt-1 w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-purple-700">
+                            Col 8 • H. maj hors contrat
                           </label>
                           <input
                             type="number"
@@ -650,9 +710,9 @@ export const FeuillePresence: React.FC<Props> = ({
                           />
                         </div>
 
-                        <div>
+                        <div className="col-span-2">
                           <label className="block text-[11px] font-semibold text-slate-600">
-                            Trajet (KM)
+                            Col 14 • Trajet (KM divisés par nb enfants)
                           </label>
                           <input
                             type="number"
@@ -668,7 +728,7 @@ export const FeuillePresence: React.FC<Props> = ({
 
                         <div className="col-span-2 sm:col-span-4">
                           <label className="block text-[11px] font-semibold text-slate-600">
-                            Commentaire / Justification
+                            Col 15 • Commentaire / Justification
                           </label>
                           <input
                             type="text"
