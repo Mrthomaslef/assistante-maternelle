@@ -2,7 +2,9 @@
 
 html,
 body {
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 @media print {
