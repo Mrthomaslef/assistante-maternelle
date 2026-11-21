@@ -133,6 +133,22 @@ function createFeuilleMois(
 
 type ActiveTab = 'presence' | 'bulletin' | 'contrat' | 'recap';
 
+// Lien partageable : ?mois=YYYY-MM ouvre (ou crée pré-rempli) le mois demandé
+function lireMoisDepuisURL(): { annee: number; mois: number; id: string } | null {
+  try {
+    const v = new URLSearchParams(window.location.search).get('mois') || '';
+    const m = /^(\d{4})-(\d{2})$/.exec(v);
+    if (!m) return null;
+    const annee = Number(m[1]);
+    const mois = Number(m[2]);
+    if (mois < 1 || mois > 12) return null;
+    return { annee, mois, id: v };
+  } catch {
+    return null;
+  }
+}
+const MOIS_URL = lireMoisDepuisURL();
+
 export default function App() {
   const [config, setConfig] = useState<ContratConfig>(() => {
     try {
@@ -148,23 +164,30 @@ export default function App() {
   });
 
   const [feuilles, setFeuilles] = useState<FeuilleMensuelle[]>(() => {
+    let list: FeuilleMensuelle[] = [];
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed.feuilles) && parsed.feuilles.length > 0) {
-          return parsed.feuilles;
+          list = parsed.feuilles;
         }
       }
     } catch {
       // ignore
     }
-    return [createFeuilleMois(2026, 10, DEFAULT_CONTRAT)];
+    if (list.length === 0) list = [createFeuilleMois(2026, 10, config)];
+    if (MOIS_URL && !list.some((f) => f.id === MOIS_URL.id)) {
+      list = [...list, createFeuilleMois(MOIS_URL.annee, MOIS_URL.mois, config)];
+    }
+    return list;
   });
 
   const [selectedFeuilleId, setSelectedFeuilleId] = useState<string>(() => {
+    if (MOIS_URL) return MOIS_URL.id;
     return feuilles[0]?.id || '2026-10';
   });
+  const [bandeauValidation, setBandeauValidation] = useState<boolean>(!!MOIS_URL);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('presence');
   const [noticeOpen, setNoticeOpen] = useState(false);
@@ -430,6 +453,28 @@ export default function App() {
             </label>
           </div>
         </div>
+
+        {/* Bandeau de validation (ouvert via le lien ?mois=YYYY-MM) */}
+        {bandeauValidation && MOIS_URL && (
+          <div className="mb-4 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-950">
+            <span className="text-lg leading-none">✅</span>
+            <div className="flex-1">
+              <strong>
+                {MOIS_NOMS[MOIS_URL.mois - 1]} {MOIS_URL.annee} pré-rempli
+              </strong>{' '}
+              — vérifiez les jours de présence (absences, congés, fériés), puis l’onglet
+              Bulletin pour le montant à payer et la déclaration Pajemploi.
+            </div>
+            <button
+              type="button"
+              onClick={() => setBandeauValidation(false)}
+              className="px-2 text-emerald-700"
+              aria-label="Fermer"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Création d'un nouveau mois */}
         {showAddMonth && (
