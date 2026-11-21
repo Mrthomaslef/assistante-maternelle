@@ -9,6 +9,7 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:/usr/bin:/bin"
 REPO="/Users/thomaslefevre/Assistantematernelle"
 LOG="$HOME/Library/Logs/rappel_marie_paie.log"
 source "$HOME/.config/assmat/contacts.env"  # MARIE_TEL (hors dépôt public)
+[[ -n "${DEST_TEL:-}" ]] && MARIE_TEL="$DEST_TEL"  # test : envoyer à un autre numéro
 MOIS_ID="$(date +%Y-%m)"; DRY=0
 for a in "$@"; do [[ "$a" == "--dry-run" ]] && DRY=1 || MOIS_ID="$a"; done
 log() { echo "$(date '+%F %T') [$MOIS_ID] $*" | tee -a "$LOG"; }
