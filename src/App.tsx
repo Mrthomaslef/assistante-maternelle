@@ -4,6 +4,7 @@ import {
   calculerResultatMensuel,
   calculerSyntheseContrat,
   genererJoursMois,
+  appliquerSituationJour,
 } from './utils/calculs';
 import { MOIS_NOMS } from './data/baremes';
 import { ContratForm } from './components/ContratForm';
@@ -149,6 +150,40 @@ function lireMoisDepuisURL(): { annee: number; mois: number; id: string } | null
 }
 const MOIS_URL = lireMoisDepuisURL();
 
+// Absences de Mabrouka détectées automatiquement dans les messages (fichier public/data/absences.json)
+interface AbsenceMessage {
+  date: string; // YYYY-MM-DD
+  motif: string;
+}
+interface AbsencesMois {
+  genere_le: string;
+  absences: AbsenceMessage[];
+}
+
+function appliquerAbsencesMessages(
+  feuille: FeuilleMensuelle,
+  config: ContratConfig,
+  data: AbsencesMois
+): FeuilleMensuelle {
+  // On repart du planning du contrat, puis on retire uniquement les journées d'absence trouvées
+  const base = genererJoursMois(feuille.annee, feuille.mois, config);
+  const semPrincipale =
+    config.semainesTypes.find((s) => s.active) || config.semainesTypes[0];
+  const jours = base.map((j) => {
+    const abs = data.absences.find((a) => a.date === j.date);
+    if (!abs || j.situation !== 'normal') return j;
+    const idx = (new Date(j.date + 'T12:00:00').getDay() + 6) % 7;
+    const h = semPrincipale ? semPrincipale.heuresParJour[idx] : 0;
+    return appliquerSituationJour(
+      { ...j, commentaire: `Absence Mabrouka (${abs.motif})` },
+      'absence_deduite',
+      h,
+      config.typeContrat
+    );
+  });
+  return { ...feuille, jours, syncMessages: data.genere_le };
+}
+
 export default function App() {
   const [config, setConfig] = useState<ContratConfig>(() => {
     try {
@@ -188,6 +223,30 @@ export default function App() {
     return feuilles[0]?.id || '2026-10';
   });
   const [bandeauValidation, setBandeauValidation] = useState<boolean>(!!MOIS_URL);
+  const [absencesDuMois, setAbsencesDuMois] = useState<AbsencesMois | null>(null);
+
+  // Ouverture via le lien du 26 : importer les absences trouvées dans les messages
+  useEffect(() => {
+    if (!MOIS_URL) return;
+    fetch(`data/absences.json?v=${Date.now()}`, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((all: Record<string, AbsencesMois> | null) => {
+        const data = all?.[MOIS_URL.id];
+        if (!data) return;
+        setAbsencesDuMois(data);
+        setFeuilles((prev) =>
+          prev.map((f) =>
+            f.id === MOIS_URL.id && f.syncMessages !== data.genere_le
+              ? appliquerAbsencesMessages(f, config, data)
+              : f
+          )
+        );
+      })
+      .catch(() => {
+        // hors-ligne : on garde le pré-remplissage du contrat
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('presence');
   const [noticeOpen, setNoticeOpen] = useState(false);
@@ -462,8 +521,24 @@ export default function App() {
               <strong>
                 {MOIS_NOMS[MOIS_URL.mois - 1]} {MOIS_URL.annee} pré-rempli
               </strong>{' '}
-              — vérifiez les jours de présence (absences, congés, fériés), puis l’onglet
-              Bulletin pour le montant à payer et la déclaration Pajemploi.
+              {absencesDuMois && (
+                <>
+                  {' '}
+                  d’après vos messages :{' '}
+                  {absencesDuMois.absences.length === 0
+                    ? 'aucune absence de Mabrouka, rien n’a été retiré.'
+                    : `${absencesDuMois.absences.length} journée(s) d’absence de Mabrouka retirée(s) (${absencesDuMois.absences
+                        .map((a) =>
+                          new Date(a.date + 'T12:00:00').toLocaleDateString('fr-FR', {
+                            weekday: 'short',
+                            day: 'numeric',
+                          })
+                        )
+                        .join(', ')}).`}
+                </>
+              )}{' '}
+              Vérifiez les jours de présence, puis l’onglet Bulletin pour le montant à payer et
+              la déclaration Pajemploi.
             </div>
             <button
               type="button"

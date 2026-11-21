@@ -138,4 +138,5 @@ export interface FeuilleMensuelle {
   label: string; // ex: "2026_Octobre"
   jours: JourPresence[];
   variables: ElementsVariablesBulletin;
+  syncMessages?: string; // version (genere_le) des absences importées depuis les messages
 }
